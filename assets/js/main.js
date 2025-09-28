@@ -13,8 +13,8 @@
     }
   };
 
-  document.addEventListener('scroll', toggleScrolled);
   window.addEventListener('load', toggleScrolled);
+  document.addEventListener('scroll', toggleScrolled);
 
   const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
   const navMenu = document.querySelector('#navmenu');
@@ -26,7 +26,7 @@
       mobileNavToggle.classList.toggle('bi-x');
     });
 
-    navMenu.querySelectorAll('a[href^="#"]').forEach(link => {
+    navMenu.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         if (body.classList.contains('mobile-nav-active')) {
           body.classList.remove('mobile-nav-active');
@@ -48,6 +48,9 @@
     }
   };
 
+  window.addEventListener('load', toggleScrollTop);
+  document.addEventListener('scroll', toggleScrollTop);
+
   if (scrollTop) {
     scrollTop.addEventListener('click', (event) => {
       event.preventDefault();
@@ -57,23 +60,4 @@
       });
     });
   }
-
-  document.addEventListener('scroll', toggleScrollTop);
-  window.addEventListener('load', toggleScrollTop);
-
-  const navLinks = document.querySelectorAll('#navmenu a[href^="#"]');
-  const setActiveLink = () => {
-    const position = window.scrollY + 200;
-    navLinks.forEach(link => {
-      const target = document.querySelector(link.getAttribute('href'));
-      if (!target) return;
-      if (position >= target.offsetTop && position < target.offsetTop + target.offsetHeight) {
-        navLinks.forEach(navLink => navLink.classList.remove('active'));
-        link.classList.add('active');
-      }
-    });
-  };
-
-  window.addEventListener('load', setActiveLink);
-  document.addEventListener('scroll', setActiveLink);
 })();
