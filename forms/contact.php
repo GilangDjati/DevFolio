@@ -1,71 +1,37 @@
 <?php
-  if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Method Not Allowed');
-  }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  http_response_code(405);
+  exit('Method Not Allowed');
+}
 
-  $receiving_email_address = 'contact@example.com';
+$receiving_email_address = 'gilangdjatie74@gmail.com';
 
-  if (file_exists($php_email_form = '../assets/vendor/php-email-form/php-email-form.php')) {
-    include($php_email_form);
-  } else {
-    http_response_code(500);
-    exit('Unable to load the "PHP Email Form" Library!');
-  }
+$name    = trim($_POST['name'] ?? '');
+$email   = trim($_POST['email'] ?? '');
+$company = trim($_POST['company'] ?? '');
+$message = trim($_POST['message'] ?? '');
 
-  $truncate = static function (string $value, int $maxLength): string {
-    return function_exists('mb_substr')
-      ? mb_substr($value, 0, $maxLength)
-      : substr($value, 0, $maxLength);
-  };
+if ($name === '' || $email === '' || $message === '') {
+  http_response_code(400);
+  exit('Please fill in all required fields.');
+}
 
-  $sanitizeHeaderField = static function (?string $value, int $maxLength = 255) use ($truncate): string {
-    $value = trim((string) $value);
-    $value = strip_tags($value);
-    $value = preg_replace("/[\r\n]+/", ' ', $value);
-    return $truncate($value, $maxLength);
-  };
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  http_response_code(400);
+  exit('Invalid email address.');
+}
 
-  if (!empty($_POST['_honey'] ?? '')) {
-    http_response_code(204); // silently drop bot submissions
-    exit;
-  }
+$subject = 'Portfolio contact from ' . $name;
+$body  = "Name: $name\nEmail: $email\n";
+if ($company !== '') {
+  $body .= "Company: $company\n";
+}
+$body .= "\n$message\n";
+$headers = "From: $name <$email>\r\nReply-To: $email\r\n";
 
-  $name    = $sanitizeHeaderField($_POST['name'] ?? '');
-  $email   = trim((string) ($_POST['email'] ?? ''));
-  $subject = $sanitizeHeaderField($_POST['subject'] ?? 'Portfolio contact');
-  $company = $sanitizeHeaderField($_POST['company'] ?? '', 255);
-  $message = trim((string) ($_POST['message'] ?? ''));
-
-  if ($name === '' || $message === '') {
-    http_response_code(400);
-    exit('Name and message are required.');
-  }
-
-  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    http_response_code(400);
-    exit('Invalid email address.');
-  }
-
-  if (strlen($message) > 5000) {
-    http_response_code(400);
-    exit('Message too long.');
-  }
-
-  $contact = new PHP_Email_Form;
-  $contact->ajax = true;
-
-  $contact->to = $receiving_email_address;
-  $contact->from_name = $name;
-  $contact->from_email = $email;
-  $contact->subject = $subject;
-
-  $contact->add_message($name, 'From');
-  $contact->add_message($email, 'Email');
-  if ($company !== '') {
-    $contact->add_message($company, 'Company');
-  }
-  $contact->add_message($message, 'Message', 10);
-
-  echo $contact->send();
-?>
+if (mail($receiving_email_address, $subject, $body, $headers)) {
+  echo 'OK';
+} else {
+  http_response_code(500);
+  echo 'Sorry, the message could not be sent.';
+}
