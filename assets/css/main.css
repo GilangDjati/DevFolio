@@ -523,6 +523,19 @@ img {
   background-color: var(--section-soft);
 }
 
+.experience-photo {
+  max-width: 320px;
+  margin: 0 auto;
+  border-radius: 24px;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.12), rgba(255, 255, 255, 0.9));
+  box-shadow: var(--card-shadow);
+}
+
+.experience-photo img {
+  border-radius: 20px;
+}
+
 .experience-card {
   background: var(--surface-color);
   border-radius: var(--card-radius);
