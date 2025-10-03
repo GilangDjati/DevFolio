@@ -196,7 +196,7 @@ img {
 }
 
 .navmenu a:hover,
-.navmenu a:focus {
+.navmenu a:focus-visible {
   color: var(--accent-color);
 }
 
@@ -205,6 +205,7 @@ img {
 }
 
 .navmenu a:hover::after,
+.navmenu a:focus-visible::after,
 .navmenu a.active::after {
   transform: scaleX(1);
 }
