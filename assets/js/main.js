@@ -6,35 +6,101 @@ const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
 const mobileNavIcon = mobileNavToggle ? mobileNavToggle.querySelector('i') : null;
 const scrollTopButton = document.querySelector('.scroll-top');
 
+const supportsHistoryPushState = typeof window !== 'undefined' && window.history && typeof window.history.pushState === 'function';
+const supportsHistoryBack = typeof window !== 'undefined' && window.history && typeof window.history.back === 'function';
+
+let mobileNavIsOpen = false;
+let mobileNavHasHistoryEntry = false;
+
+const syncMobileNavState = (isOpen) => {
+  body.classList.toggle('mobile-nav-active', isOpen);
+
+  if (mobileNavToggle) {
+    mobileNavToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  if (mobileNavIcon) {
+    mobileNavIcon.classList.toggle('bi-list', !isOpen);
+    mobileNavIcon.classList.toggle('bi-x', isOpen);
+  }
+};
+
+const openMobileNav = () => {
+  if (mobileNavIsOpen) {
+    return;
+  }
+
+  mobileNavIsOpen = true;
+  syncMobileNavState(true);
+
+  if (supportsHistoryPushState) {
+    window.history.pushState({ mobileNav: true }, '', window.location.href);
+    mobileNavHasHistoryEntry = true;
+  } else {
+    mobileNavHasHistoryEntry = false;
+  }
+};
+
+const closeMobileNav = (shouldNavigateBack = false) => {
+  if (!mobileNavIsOpen) {
+    return;
+  }
+
+  mobileNavIsOpen = false;
+  syncMobileNavState(false);
+
+  if (shouldNavigateBack && mobileNavHasHistoryEntry && supportsHistoryBack) {
+    mobileNavHasHistoryEntry = false;
+    window.history.back();
+  } else {
+    mobileNavHasHistoryEntry = false;
+  }
+};
+
 if (mobileNavToggle && navMenu) {
   mobileNavToggle.addEventListener('click', () => {
-    const navIsOpen = body.classList.toggle('mobile-nav-active');
-    mobileNavToggle.setAttribute('aria-expanded', navIsOpen ? 'true' : 'false');
+    if (mobileNavIsOpen) {
+      closeMobileNav(true);
+    } else {
+      openMobileNav();
+    }
+  });
 
-    if (mobileNavIcon) {
-      mobileNavIcon.classList.toggle('bi-list', !navIsOpen);
-      mobileNavIcon.classList.toggle('bi-x', navIsOpen);
+  document.addEventListener('click', (event) => {
+    if (!mobileNavIsOpen) {
+      return;
+    }
+
+    const target = event.target;
+
+    if ((navMenu && navMenu.contains(target)) || (mobileNavToggle && mobileNavToggle.contains(target))) {
+      return;
+    }
+
+    closeMobileNav(true);
+  });
+
+  window.addEventListener('popstate', (event) => {
+    if (mobileNavIsOpen) {
+      closeMobileNav(false);
+      return;
+    }
+
+    if (event.state && event.state.mobileNav && supportsHistoryBack) {
+      mobileNavHasHistoryEntry = false;
+      window.history.back();
     }
   });
 }
 
 if (navLinks.length) {
-  navLinks.forEach(link => {
+  navLinks.forEach((link) => {
     link.addEventListener('click', () => {
-      navLinks.forEach(item => item.classList.remove('active'));
+      navLinks.forEach((item) => item.classList.remove('active'));
       link.classList.add('active');
 
-      if (body.classList.contains('mobile-nav-active')) {
-        body.classList.remove('mobile-nav-active');
-
-        if (mobileNavToggle) {
-          mobileNavToggle.setAttribute('aria-expanded', 'false');
-        }
-
-        if (mobileNavIcon) {
-          mobileNavIcon.classList.add('bi-list');
-          mobileNavIcon.classList.remove('bi-x');
-        }
+      if (mobileNavIsOpen) {
+        closeMobileNav(false);
       }
     });
   });
